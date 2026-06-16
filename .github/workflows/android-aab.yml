@@ -1,4 +1,4 @@
-name: Build Godot AAB
+name: Build Godot AAB (Production)
 
 on:
   workflow_dispatch:
@@ -7,37 +7,60 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      GODOT_VERSION: "4.2-stable"
+
     steps:
-      # 📥 تحميل المشروع
+      # 📥 1. تحميل المشروع
       - uses: actions/checkout@v4
 
-      # 🧰 أدوات أساسية
-      - name: Install dependencies
+      # 🧰 2. أدوات النظام
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget unzip findutils
+          sudo apt-get install -y wget unzip openjdk-17-jdk rsync
 
-      # 🎮 تحميل Godot 4
+      # ☕ 3. إعداد Java (ضروري لـ Android build)
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # 🎮 4. تحميل Godot
       - name: Download Godot
         run: |
-          wget https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_linux.x86_64.zip
-          unzip Godot_v4.2-stable_linux.x86_64.zip
-          chmod +x Godot_v4.2-stable_linux.x86_64
+          wget https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip
+          unzip Godot_v${GODOT_VERSION}_linux.x86_64.zip
+          chmod +x Godot_v${GODOT_VERSION}_linux.x86_64
 
-      # 🏗️ Export (Godot يقرر مكان الملف)
-      - name: Export Android AAB
+      # 📱 5. تثبيت Android SDK (minimal working)
+      - name: Setup Android SDK
         run: |
+          mkdir -p $HOME/android-sdk
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$PATH:$HOME/android-sdk/platform-tools" >> $GITHUB_ENV
+
+      # 📌 6. عرض المشروع (debug)
+      - name: Debug project
+        run: ls -R
+
+      # 🏗️ 7. Export Android AAB
+      - name: Build AAB
+        run: |
+          mkdir -p build
+
           ./Godot_v4.2-stable_linux.x86_64 --headless \
             --path . \
             --export-release "Android"
 
-      # 🔍 البحث عن ملف AAB الحقيقي
-      - name: Find AAB file
+      # 🔍 8. البحث عن ملف AAB الحقيقي
+      - name: Find AAB
         run: |
           echo "Searching for AAB..."
-          find . -type f -name "*.aab" || true
+          find . -type f -name "*.aab" || echo "NO AAB FOUND"
 
-      # 📦 رفع أي AAB تم إنشاؤه
+      # 📦 9. رفع الناتج
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
