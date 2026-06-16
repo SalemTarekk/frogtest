@@ -1,4 +1,4 @@
-name: Build Godot AAB (REAL FIX)
+name: Build Godot AAB (FINAL FIX)
 
 on:
   workflow_dispatch:
@@ -8,59 +8,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 📥 المشروع
       - uses: actions/checkout@v4
 
-      # ☕ Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      # 🧰 أدوات
       - name: Install tools
         run: |
           sudo apt-get update
           sudo apt-get install -y wget unzip
 
-      # 🎮 تحميل Godot
+      # 🎮 Godot
       - name: Download Godot
         run: |
           wget https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_linux.x86_64.zip
           unzip Godot_v4.6.3-stable_linux.x86_64.zip
           chmod +x Godot_v4.6.3-stable_linux.x86_64
 
-      # 📦 🔥 FIX الحقيقي (تثبيت templates بالطريقة الصحيحة 100%)
-      - name: Install Export Templates (FIXED)
+      # 📦 FIX الحقيقي: export templates system-wide install
+      - name: Install Export Templates (REAL FIX)
         run: |
-          mkdir -p ~/.local/share/godot/export_templates
+          mkdir -p ~/.local/share/godot/export_templates/4.6.3.stable
 
           wget https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_export_templates.tpz
 
           unzip Godot_v4.6.3-stable_export_templates.tpz -d tmp
 
-          mkdir -p ~/.local/share/godot/export_templates/4.6.3.stable
-
-          # 🔥 أهم سطر (نقل كامل محتوى templates بشكل صحيح)
           cp -r tmp/templates/* ~/.local/share/godot/export_templates/4.6.3.stable/
 
-      # 📌 debug
-      - name: Check templates
-        run: ls -R ~/.local/share/godot/export_templates || true
+          # 🔥 IMPORTANT: mark install (this is what was missing)
+          touch ~/.local/share/godot/export_templates/4.6.3.stable/.gdignore
 
-      # 🏗️ Build
+      # 📌 debug
+      - name: Verify templates
+        run: ls -R ~/.local/share/godot/export_templates
+
+      # 🏗️ BUILD
       - name: Export Android AAB
         run: |
           ./Godot_v4.6.3-stable_linux.x86_64 --headless \
             --path . \
             --export-release "Android"
 
-      # 🔍 البحث عن الناتج
+      # 🔍 find output
       - name: Find AAB
         run: find . -name "*.aab" || true
 
-      # 📦 رفع الملف
+      # 📦 upload
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
