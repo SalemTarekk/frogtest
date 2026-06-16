@@ -11,35 +11,33 @@ jobs:
       # 📥 تحميل المشروع
       - uses: actions/checkout@v4
 
-      # 🧰 أدوات النظام
+      # 🧰 أدوات أساسية
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget unzip rsync
+          sudo apt-get install -y wget unzip findutils
 
-      # 🎮 تحميل Godot
+      # 🎮 تحميل Godot 4
       - name: Download Godot
         run: |
           wget https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_linux.x86_64.zip
           unzip Godot_v4.2-stable_linux.x86_64.zip
           chmod +x Godot_v4.2-stable_linux.x86_64
 
-      # 📌 عرض الملفات (debug فقط)
-      - name: Show project files
-        run: ls -R
-
-      # 🏗️ Export Android AAB (IMPORTANT FIX)
+      # 🏗️ Export (Godot يقرر مكان الملف)
       - name: Export Android AAB
         run: |
           ./Godot_v4.2-stable_linux.x86_64 --headless \
             --path . \
             --export-release "Android"
 
-      # 🔍 البحث عن ملف AAB الناتج
-      - name: Locate AAB file
-        run: find . -name "*.aab" || true
+      # 🔍 البحث عن ملف AAB الحقيقي
+      - name: Find AAB file
+        run: |
+          echo "Searching for AAB..."
+          find . -type f -name "*.aab" || true
 
-      # 📦 رفع أي AAB يتم إنشاؤه
+      # 📦 رفع أي AAB تم إنشاؤه
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
