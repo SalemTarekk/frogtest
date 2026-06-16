@@ -1,4 +1,4 @@
-name: Build Godot AAB (Production)
+name: Build Godot Android AAB
 
 on:
   workflow_dispatch:
@@ -7,46 +7,54 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      GODOT_VERSION: "4.2-stable"
-
     steps:
-      # 📥 1. تحميل المشروع
+      # 📥 1. المشروع
       - uses: actions/checkout@v4
 
-      # 🧰 2. أدوات النظام
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip openjdk-17-jdk rsync
-
-      # ☕ 3. إعداد Java (ضروري لـ Android build)
+      # ☕ 2. Java (مهم جدًا)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
+      # 🧰 3. أدوات النظام
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip rsync
+
       # 🎮 4. تحميل Godot
       - name: Download Godot
         run: |
-          wget https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip
-          unzip Godot_v${GODOT_VERSION}_linux.x86_64.zip
-          chmod +x Godot_v${GODOT_VERSION}_linux.x86_64
+          wget https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_linux.x86_64.zip
+          unzip Godot_v4.2-stable_linux.x86_64.zip
+          chmod +x Godot_v4.2-stable_linux.x86_64
 
-      # 📱 5. تثبيت Android SDK (minimal working)
+      # 📱 5. تحميل Android Command Line Tools (الحل الحقيقي)
       - name: Setup Android SDK
         run: |
           mkdir -p $HOME/android-sdk
-          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$PATH:$HOME/android-sdk/platform-tools" >> $GITHUB_ENV
+          cd $HOME/android-sdk
 
-      # 📌 6. عرض المشروع (debug)
-      - name: Debug project
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip commandlinetools-linux-*.zip -d cmdline-tools
+          
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/cmdline-tools/* cmdline-tools/latest/
+
+          yes | cmdline-tools/latest/bin/sdkmanager --licenses || true
+          cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+
+      # 📌 6. Debug
+      - name: Show project
         run: ls -R
 
-      # 🏗️ 7. Export Android AAB
-      - name: Build AAB
+      # 🏗️ 7. Export (الطريقة الصحيحة)
+      - name: Build Android AAB
         run: |
           mkdir -p build
 
@@ -54,14 +62,12 @@ jobs:
             --path . \
             --export-release "Android"
 
-      # 🔍 8. البحث عن ملف AAB الحقيقي
+      # 🔍 8. البحث عن AAB
       - name: Find AAB
-        run: |
-          echo "Searching for AAB..."
-          find . -type f -name "*.aab" || echo "NO AAB FOUND"
+        run: find . -name "*.aab" || true
 
-      # 📦 9. رفع الناتج
-      - name: Upload AAB artifact
+      # 📦 9. رفع الملف
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: godot-aab
