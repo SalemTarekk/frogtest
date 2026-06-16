@@ -1,18 +1,11 @@
-# Godot 4+
+# Godot
 .godot/
-android/
-export/
-exports/
+.import/
 
-# Imported assets (auto-generated on first import)
-*.import
+# Android build
+android/build/
+*.apk
+*.aab
 
-# Export presets with credentials
-export_presets.cfg
-
-# OS generated files
-Thumbs.db
+# system
 .DS_Store
-
-# Godot editor crash logs
-hs_err_*.log
