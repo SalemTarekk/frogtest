@@ -1,4 +1,4 @@
-name: Build Godot Android AAB
+name: Build Android AAB (Gradle)
 
 on:
   workflow_dispatch:
@@ -17,21 +17,17 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install Android SDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Download Godot
+      - name: Build AAB with Gradle
         run: |
-          wget https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_linux.x86_64.zip
-          unzip Godot_v4.2-stable_linux.x86_64.zip
-          chmod +x Godot_v4.2-stable_linux.x86_64
-
-      - name: Build AAB
-        run: |
-          ./Godot_v4.2-stable_linux.x86_64 --headless --path . --export-release "Android" build.aab
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: android-aab
-          path: build.aab
+          path: android/app/build/outputs/bundle/release/*.aab
