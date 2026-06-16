@@ -1,3 +1,18 @@
-# Godot 4+ specific ignores
+# Godot 4+
 .godot/
-/android/
+android/
+export/
+exports/
+
+# Imported assets (auto-generated on first import)
+*.import
+
+# Export presets with credentials
+export_presets.cfg
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# Godot editor crash logs
+hs_err_*.log
