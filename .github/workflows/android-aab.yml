@@ -1,7 +1,7 @@
 name: Build Android AAB (Gradle)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # 👈 تشغيل يدوي فقط (بدون push / بدون auto)
 
 jobs:
   build:
@@ -19,9 +19,6 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-
-      - name: Debug: list android folder
-        run: ls -R android
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
