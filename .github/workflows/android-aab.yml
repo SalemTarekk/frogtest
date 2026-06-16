@@ -1,4 +1,4 @@
-name: Build Godot AAB (FINAL FIX)
+name: Build Godot AAB (ULTIMATE FIX)
 
 on:
   workflow_dispatch:
@@ -28,8 +28,8 @@ jobs:
           unzip Godot_v4.6.3-stable_linux.x86_64.zip
           chmod +x Godot_v4.6.3-stable_linux.x86_64
 
-      # 📦 FIX الحقيقي: export templates system-wide install
-      - name: Install Export Templates (REAL FIX)
+      # 📦 Templates (correct install)
+      - name: Install Templates
         run: |
           mkdir -p ~/.local/share/godot/export_templates/4.6.3.stable
 
@@ -39,27 +39,28 @@ jobs:
 
           cp -r tmp/templates/* ~/.local/share/godot/export_templates/4.6.3.stable/
 
-          # 🔥 IMPORTANT: mark install (this is what was missing)
-          touch ~/.local/share/godot/export_templates/4.6.3.stable/.gdignore
+      # 🧠 FORCE Godot to register Android export module
+      - name: Initialize Godot Project
+        run: |
+          ./Godot_v4.6.3-stable_linux.x86_64 --headless --editor --quit || true
 
-      # 📌 debug
-      - name: Verify templates
-        run: ls -R ~/.local/share/godot/export_templates
-
-      # 🏗️ BUILD
+      # 🏗️ Export (FIXED MODE)
       - name: Export Android AAB
         run: |
+          mkdir -p build
+
           ./Godot_v4.6.3-stable_linux.x86_64 --headless \
             --path . \
-            --export-release "Android"
+            --export-release "Android" \
+            "build/FrogTest.aab"
 
-      # 🔍 find output
-      - name: Find AAB
-        run: find . -name "*.aab" || true
+      # 🔍 verify
+      - name: Check output
+        run: ls -R build || true
 
       # 📦 upload
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: godot-aab
-          path: "**/*.aab"
+          path: build/*.aab
