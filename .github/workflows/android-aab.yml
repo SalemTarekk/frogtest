@@ -20,14 +20,14 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # 🔥 مهم جدًا: إعطاء صلاحية تشغيل للـ gradlew
+      # 🔥 إعطاء صلاحية تشغيل للـ gradlew (الموجود داخل android/build)
       - name: Make gradlew executable
-        run: chmod +x android/gradlew
+        run: chmod +x android/build/gradlew
 
-      # 🏗️ بناء AAB عبر Gradle (الطريقة الصحيحة)
+      # 🏗️ بناء AAB عبر Gradle
       - name: Build AAB with Gradle
         run: |
-          cd android
+          cd android/build
           ./gradlew bundleRelease
 
       # 📦 رفع ملف AAB الناتج
@@ -35,4 +35,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-aab
-          path: android/app/build/outputs/bundle/release/*.aab
+          path: android/build/app/build/outputs/bundle/release/*.aab
