@@ -1,0 +1,45 @@
+name: Build Android AAB (Gradle)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 📥 تحميل الكود من GitHub
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ☕ إعداد Java (مهم لـ Gradle)
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # 🤖 إعداد Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 🔍 تحقق من مكان gradlew (للتأكد)
+      - name: Debug: list android folder
+        run: ls -R android
+
+      # 🔥 إعطاء صلاحية تشغيل للـ gradlew (المسار الصحيح)
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      # 🏗️ بناء ملف AAB باستخدام Gradle
+      - name: Build AAB
+        run: |
+          cd android
+          ./gradlew bundleRelease
+
+      # 📦 رفع ملف AAB النهائي
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: android/app/build/outputs/bundle/release/*.aab
