@@ -1,7 +1,7 @@
-name: Build Android AAB (Gradle)
+name: Build Godot Android AAB
 
 on:
-  workflow_dispatch:   # 👈 تشغيل يدوي فقط (بدون push / بدون auto)
+  workflow_dispatch:
 
 jobs:
   build:
@@ -11,25 +11,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
-
-      - name: Build AAB
+      - name: Install dependencies
         run: |
-          cd android
-          ./gradlew bundleRelease
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
 
-      - name: Upload AAB artifact
+      - name: Download Godot Headless
+        run: |
+          wget https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_linux.x86_64.zip
+          unzip Godot_v4.2-stable_linux.x86_64.zip
+          chmod +x Godot_v4.2-stable_linux.x86_64
+
+      - name: Export AAB
+        run: |
+          mkdir -p build
+          ./Godot_v4.2-stable_linux.x86_64 --headless --path . --export-release "Android" build/game.aab
+
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: android-aab
-          path: android/app/build/outputs/bundle/release/*.aab
+          name: godot-aab
+          path: build/*.aab
