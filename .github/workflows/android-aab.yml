@@ -1,4 +1,4 @@
-name: Build Godot Android AAB
+name: Build Godot AAB
 
 on:
   workflow_dispatch:
@@ -8,27 +8,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y wget unzip
 
-      - name: Download Godot Headless
+      - name: Download Godot
         run: |
           wget https://github.com/godotengine/godot/releases/download/4.2-stable/Godot_v4.2-stable_linux.x86_64.zip
           unzip Godot_v4.2-stable_linux.x86_64.zip
           chmod +x Godot_v4.2-stable_linux.x86_64
 
+      - name: List project (DEBUG)
+        run: ls -R
+
       - name: Export AAB
         run: |
           mkdir -p build
-          ./Godot_v4.2-stable_linux.x86_64 --headless --path . --export-release "Android" build/game.aab
+          ./Godot_v4.2-stable_linux.x86_64 --headless \
+            --path . \
+            --export-release "Android" build/game.aab
+
+      - name: Verify output
+        run: ls -R build || true
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: godot-aab
-          path: build/*.aab
+          path: build/
