@@ -1,4 +1,4 @@
-name: Build Godot AAB (4.6.3)
+name: Build Godot AAB (FIXED)
 
 on:
   workflow_dispatch:
@@ -8,46 +8,57 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 📥 تحميل المشروع
+      # 📥 المشروع
       - uses: actions/checkout@v4
 
-      # ☕ Java (ضروري للأندرويد)
+      # ☕ Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      # 🧰 أدوات النظام
+      # 🧰 أدوات
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget unzip findutils
+          sudo apt-get install -y wget unzip
 
-      # 🎮 تحميل Godot 4.6.3 (نفس نسخة templates عندك)
+      # 🎮 تحميل Godot
       - name: Download Godot
         run: |
           wget https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_linux.x86_64.zip
           unzip Godot_v4.6.3-stable_linux.x86_64.zip
           chmod +x Godot_v4.6.3-stable_linux.x86_64
 
-      # 📌 عرض المشروع (debug)
-      - name: Show project files
+      # 📦 تحميل Export Templates (🔥 FIX الأساسي)
+      - name: Install Export Templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.6.3.stable
+
+          wget https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_export_templates.tpz
+
+          unzip Godot_v4.6.3-stable_export_templates.tpz -d tmp_templates
+
+          mv tmp_templates/templates/* ~/.local/share/godot/export_templates/4.6.3.stable/
+
+      # 📌 عرض المشروع
+      - name: Show project
         run: ls -R
 
-      # 🏗️ Build Android AAB
+      # 🏗️ Build AAB
       - name: Export Android AAB
         run: |
           ./Godot_v4.6.3-stable_linux.x86_64 --headless \
             --path . \
             --export-release "Android"
 
-      # 🔍 البحث عن ملف AAB الحقيقي
+      # 🔍 العثور على AAB
       - name: Find AAB
-        run: find . -type f -name "*.aab" || true
+        run: find . -name "*.aab" || true
 
-      # 📦 رفع الناتج
-      - name: Upload AAB artifact
+      # 📦 رفع الملف
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: godot-aab
